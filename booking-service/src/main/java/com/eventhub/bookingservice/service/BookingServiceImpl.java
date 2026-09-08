@@ -1,7 +1,9 @@
 package com.eventhub.bookingservice.service;
 
+import com.eventhub.bookingservice.client.EventClient;
 import com.eventhub.bookingservice.dto.BookingRequestDTO;
 import com.eventhub.bookingservice.dto.BookingResponseDTO;
+import com.eventhub.bookingservice.dto.EventServiceResponseDTO;
 import com.eventhub.bookingservice.entity.Booking;
 import com.eventhub.bookingservice.exception.BookingNotFoundException;
 import com.eventhub.bookingservice.mapper.BookingMapper;
@@ -14,15 +16,23 @@ import java.util.List;
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
+    private final EventClient eventClient;
 
-    public BookingServiceImpl(BookingRepository bookingRepository) {
+    public BookingServiceImpl(BookingRepository bookingRepository,
+                              EventClient eventClient) {
         this.bookingRepository = bookingRepository;
+        this.eventClient = eventClient;
     }
-
     @Override
-    public BookingResponseDTO createBooking(BookingRequestDTO requestDTO) {
-        Booking booking = BookingMapper.requestDTOToEntity(requestDTO);
+    public BookingResponseDTO createBooking(BookingRequestDTO bookingRequestDTO) {
+
+        EventServiceResponseDTO event =
+                eventClient.getEventById(bookingRequestDTO.getEventId());
+
+        Booking booking = BookingMapper.requestDTOToEntity(bookingRequestDTO);
+
         Booking savedBooking = bookingRepository.save(booking);
+
         return BookingMapper.entityToResponseDTO(savedBooking);
     }
 
